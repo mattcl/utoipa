@@ -146,6 +146,13 @@ where
     /// * **url** Must point to location where the [`Servable`] is served.
     /// * **openapi** Is [`Spec`] that is served via this [`Servable`] from the _**url**_.
     fn with_url<U: Into<Cow<'static, str>>>(url: U, openapi: S) -> Self;
+
+    /// Construct a new [`Servable`] instance of _`openapi`_ with given _`url`_ and _`html`_.
+    ///
+    /// * **url** Must point to location where the [`Servable`] is served.
+    /// * **openapi** Is [`Spec`] that is served via this [`Servable`] from the _**url**_.
+    /// * **html** Is html that is served via this [`Servable`] from the _**html**_.
+    fn with_url_and_html<U: Into<Cow<'static, str>>>(url: U, openapi: S, html: &'static str) -> Self;
 }
 
 #[cfg(any(feature = "actix-web", feature = "rocket", feature = "axum"))]
@@ -153,6 +160,14 @@ impl<S: Spec> Servable<S> for Scalar<S> {
     fn with_url<U: Into<Cow<'static, str>>>(url: U, openapi: S) -> Self {
         Self {
             html: Cow::Borrowed(DEFAULT_HTML),
+            url: url.into(),
+            openapi,
+        }
+    }
+
+    fn with_url_and_html<U: Into<Cow<'static, str>>>(url: U, openapi: S, html: &'static str) -> Self {
+        Self {
+            html: Cow::Borrowed(html),
             url: url.into(),
             openapi,
         }
@@ -187,8 +202,24 @@ impl<S: Spec> Scalar<S> {
     /// Scalar::new(json!({"openapi": "3.1.0"}));
     /// ```
     pub fn new(openapi: S) -> Self {
+        Self::new_with_html(openapi, DEFAULT_HTML)
+    }
+
+    /// Constructs a new [`Scalar`] instance for given _`openapi`_ [`Spec`] with
+    /// custom html.
+    ///
+    /// # Examples
+    ///
+    /// _**Create new [`Scalar`] instance.**_
+    /// ```
+    /// # use utoipa_scalar::Scalar;
+    /// # use serde_json::json;
+    /// let html = include_str!("../res/scalar.html");
+    /// Scalar::new_with_html(json!({"openapi": "3.1.0"}), html);
+    /// ```
+    pub fn new_with_html(openapi: S, html: &'static str) -> Self {
         Self {
-            html: Cow::Borrowed(DEFAULT_HTML),
+            html: Cow::Borrowed(html),
             url: Cow::Borrowed("/"),
             openapi,
         }
